@@ -8,4 +8,4 @@ AlgoGenetique.o: AlgoGenetique.c AlgoGenetique.h
 	gcc -c AlgoGenetique.c AlgoGenetique.h -Wall -g
 
 clean:
-	rm -rf *.o main
+	rm -rf *.o *.gch main 

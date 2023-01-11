@@ -27,6 +27,7 @@ typedef struct {
 
 void affiche(unsigned char *gene); 
 void calcul(serpent *g); 
+void testCalcul();
 void selection(groupe *population,groupe *parents); 
 int evaluation(groupe *population); 
 void generationAleatoire(groupe *population); 

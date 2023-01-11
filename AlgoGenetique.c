@@ -3,15 +3,16 @@
 #include <strings.h> 
 #include <string.h> 
 #include <unistd.h> 
+#include <math.h>
 #include "AlgoGenetique.h" 
 
 
-#define lire(gene,i)    (i%2)?(gene[i/2]&0xF):(gene[i/2]>>4); 
+#define lire(gene,i)    (((i)%2)?(gene[(i)/2]&0xF):(gene[(i)/2]>>4))
 
 void affiche(unsigned char *gene)
 {
 	char code[]="+-*/"; 
-	int i=0,res;  
+	int i=0,res;
 	// the last gene is useless 
 	while (i<(NBGENE-1)) {
 		res=lire(gene,i); 
@@ -26,8 +27,48 @@ void affiche(unsigned char *gene)
 
 void calcul(serpent *g)
 {
+	char op[] = "+-*/";
+	char curr_op = ' ';
+	int op1 = -MAX, op2 = -MAX;
+	int j = -1;
+	for(int i = 0; i < NBGENE - 1; i++) {
+		if(j == 2) {
+			if (curr_op == '+') {
+				op1 = op1 + op2;
+			}
+			else if (curr_op == '-') {
+				op1 = op1 - op2;
+			}
+			else if (curr_op == '*') {
+				op1 = op1 * op2;
+			}
+			else if (curr_op == '/') {
+				if(op2 == 0) {
+					op1 = MAX;
+					break;
+				}
+				else {
+					op1 = op1 / op2;
+				}
+			}
+			j = 0;
+			i--;
+		}
+		else {
+			if(i%2) {
+				curr_op = op[lire(g->gene, i) % 4];
+			}
+			else {
+				if (op1 == -MAX) {
+					op1 = lire(g->gene, i);
+				}
+				else op2 = lire(g->gene, i);
+			}
+			j++;
+		}
+	}
+	g->score = op1;
 }
-
 
 void testCalcul() 
 {
@@ -46,19 +87,57 @@ serpent test[]={
 	{"\x3e\x05\xf1\xec\xd9\x67\x33\xb7\x99\x50\xa3\xe3\x14\xd3\xd9\x34\xf7\x5e\xa0\xf2\x10\xa8\xf6\x05\x94\x01\xbe\xb4\xbc\x44\x78\xfa",727}
 	}; 
 
+	groupe *test = malloc(sizeof(serpent)*11);
+
 	for(i=0;i<sizeof(test)/sizeof(serpent);i++) {
+		groupe->membres[i] = test[i];
 		expect=test[i].score; 
 		calcul(&test[i]);
-		if (expect != test[i].score) printf("error\n");  
+		if (expect != test[i].score) printf("error\n");
+	}
+}
+
+void swap_serpent(serpent *s1, serpent *s2) {
+	serpent tmp = *s1;
+	*s1 = *s2;
+	*s2 = tmp;
+}
+
+void trier_serpents(groupe *nontrie) {
+	int nb_serpents = nontrie->nombre;
+	int i, j;
+	for (i = 1 ; i < nb_serpents ; i++){
+		for (j = i ; j > 0 ; j--){
+			if (nontrie->membres[j].score < nontrie->membres[j-1].score){
+				swap(&nontrie->membres[j], &nontrie->membres[j-1]);
+			}
+		}
 	}
 }
 
 void selection(groupe *population,groupe *parents)
 {
+	int nb_serpents = population->nombre;
+	parents = malloc(NBPARENTS*sizeof(serpent));
+	parents->nombre = NBPARENTS;
+	evaluation(population);
+	trier_serpents(population);
+	for(int i = 0; i < NBPARENTS; i++) {
+		parents->membres[i] = population->membres[i];
+	}
 }
 
 int evaluation(groupe *population) 
 {
+	int nb_serpents = population->nombre;
+	for(int i = 0; i < nb_serpents; i++) {
+		calcul(&population->membres[i]);
+		if(population->membres[i].score == 666) {
+			printf("Solution trouvée : serpent %d", i);
+			return 0;
+		}
+	}
+	return 1;
 }
 
 void generationAleatoire(groupe *population)

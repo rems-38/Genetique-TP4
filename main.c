@@ -8,6 +8,8 @@
 
 int main(int argc, char *argv[]) 
 {	
+    
+    testCalcul();
 	int opt,nbgeneration=0;
  	groupe population,parents; 
 
